@@ -1,28 +1,33 @@
-const express = require("express");
-const app = express();
-const cors = require("cors");
-const {MongoClient, ObjectId} = require("mongodb");
-require("dotenv").config()
+const express = require('express')
+const app = express()
+const cors = require('cors')
+const {MongoClient, ObjectId } = require('mongodb')
+const { response } = require('express')
+const { request } = require('http')
+require('dotenv').config()
 const PORT = 8000
-
-
 
 let db,
     dbConnectionStr = process.env.DB_STRING,
-    dbName = "sample_mflix",
+    dbName = 'sample_mflix',
     collection
 
 MongoClient.connect(dbConnectionStr)
     .then(client => {
-        console.log("Connected to le database")
+        console.log(`Connected to database`)
         db = client.db(dbName)
-        collection = db.collection("movies")
-    });
+        collection = db.collection('movies')
+    })
 
-
-app.use(express.urlencoded({extended: true}))
+app.use(express.urlencoded({extended : true}))
 app.use(express.json())
 app.use(cors())
+
+app.use(express.static('public'))
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+  });
+
 
 app.get("/search", async (request,response) => {
     try {
@@ -40,9 +45,11 @@ app.get("/search", async (request,response) => {
                 }
             }
         ]).toArray()
+        console.log(result)
         response.send(result)
     } catch (error) {
         response.status(500).send({message: error.message})
+        console.log(error)
     }
 })
 
@@ -55,10 +62,8 @@ app.get("/get/:id", async (request, response) => {
     } catch (error) {
         response.status(500).send({message: error.message})
     }
-})
-
-
-
+}
+)
 
 // listen on env port or 8000
 app.listen(process.env.PORT || PORT, () => console.log("Server Running"))
